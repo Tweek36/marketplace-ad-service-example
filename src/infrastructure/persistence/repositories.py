@@ -10,7 +10,15 @@ class SQLAlchemyAdRepository(AdRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(self, title: str, description: str, price: int, category: str, city: str, user_id: int) -> Ad:
+    async def create(
+        self,
+        title: str,
+        description: str,
+        price: int,
+        category: str,
+        city: str,
+        user_id: int,
+    ) -> Ad:
         model = AdModel(
             title=title,
             description=description,
@@ -41,9 +49,7 @@ class SQLAlchemyAdRepository(AdRepository):
         await self._session.flush()
 
     async def get_by_id(self, ad_id: int) -> Ad | None:
-        result = await self._session.execute(
-            select(AdModel).where(AdModel.id == ad_id)
-        )
+        result = await self._session.execute(select(AdModel).where(AdModel.id == ad_id))
         model = result.scalar_one_or_none()
         if model is None:
             return None
@@ -64,9 +70,7 @@ class SQLAlchemyAdRepository(AdRepository):
         return [_to_entity(model) for model in models]
 
     async def update(self, ad_id: int, **kwargs) -> Ad | None:
-        result = await self._session.execute(
-            select(AdModel).where(AdModel.id == ad_id)
-        )
+        result = await self._session.execute(select(AdModel).where(AdModel.id == ad_id))
         model = result.scalar_one_or_none()
         if model is None:
             return None
@@ -79,9 +83,7 @@ class SQLAlchemyAdRepository(AdRepository):
         return _to_entity(model)
 
     async def delete(self, ad_id: int) -> bool:
-        result = await self._session.execute(
-            select(AdModel).where(AdModel.id == ad_id)
-        )
+        result = await self._session.execute(select(AdModel).where(AdModel.id == ad_id))
         model = result.scalar_one_or_none()
         if model is None:
             return False
@@ -93,6 +95,7 @@ class SQLAlchemyAdRepository(AdRepository):
     async def count(self) -> int:
         result = await self._session.execute(select(AdModel))
         return len(result.scalars().all())
+
 
 def _to_entity(model: AdModel) -> Ad:
     return Ad(
