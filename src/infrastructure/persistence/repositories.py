@@ -1,6 +1,4 @@
-from typing import List
-
-from sqlalchemy import func, select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.ports.repositories import AdRepository
@@ -12,79 +10,101 @@ class SQLAlchemyAdRepository(AdRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(
-        self,
-        user_id: int,
-        title: str,
-        description: str,
-        price: int,
-        category: str,
-        city: str,
-    ) -> Ad:
+    async def create(self, title: str, description: str, price: int, category: str, city: str, user_id: int) -> Ad:
         model = AdModel(
-            user_id=user_id,
             title=title,
             description=description,
             price=price,
             category=category,
             city=city,
-            status=AdStatus.ACTIVE.value,
-            views=0,
+            user_id=user_id,
         )
         self._session.add(model)
         await self._session.flush()
-        await self._session.refresh(model)
         return _to_entity(model)
 
-    async def get_by_id(
-        self,
-        ad_id: int,
-    ) -> Ad | None:
-        raise NotImplementedError
-
-    async def list(
-        self,
-        user_id: int | None,
-        limit: int,
-        offset: int,
-    ) -> tuple[List[Ad], int]:
-        query = select(AdModel).where(AdModel.status == AdStatus.ACTIVE.value)
-        count_query = (
-            select(func.count())
-            .select_from(AdModel)
-            .where(AdModel.status == AdStatus.ACTIVE.value)
+    async def save(self, ad: Ad) -> None:
+        await self._session.execute(
+            update(AdModel)
+            .where(AdModel.id == ad.id)
+            .values(
+                title=ad.title,
+                description=ad.description,
+                price=ad.price,
+                category=ad.category,
+                city=ad.city,
+                user_id=ad.user_id,
+                status=ad.status.value,
+                updated_at=ad.updated_at,
+            )
         )
+        await self._session.flush()
 
-        if user_id is not None:
-            query = query.where(AdModel.user_id == user_id)
-            count_query = count_query.where(AdModel.user_id == user_id)
+    async def get_by_id(self, ad_id: int) -> Ad | None:
+        result = await self._session.execute(
+            select(AdModel).where(AdModel.id == ad_id)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+        return _to_entity(model)
 
-        query = query.order_by(AdModel.created_at.desc()).limit(limit).offset(offset)
+    async def get_by_user_id(self, user_id: int) -> list[Ad]:
+        result = await self._session.execute(
+            select(AdModel).where(AdModel.user_id == user_id)
+        )
+        models = result.scalars().all()
+        return [_to_entity(model) for model in models]
 
-        items_result = await self._session.execute(query)
-        count_result = await self._session.execute(count_query)
-        models = items_result.scalars().all()
-        total = count_result.scalar_one()
-        return [_to_entity(m) for m in models], total
+    async def list(self, limit: int, offset: int) -> list[Ad]:
+        result = await self._session.execute(
+            select(AdModel).limit(limit).offset(offset)
+        )
+        models = result.scalars().all()
+        return [_to_entity(model) for model in models]
 
-    async def save(
-        self,
-        ad: Ad,
-    ) -> None:
-        raise NotImplementedError
+    async def update(self, ad_id: int, **kwargs) -> Ad | None:
+        result = await self._session.execute(
+            select(AdModel).where(AdModel.id == ad_id)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
 
+        for key, value in kwargs.items():
+            if hasattr(model, key):
+                setattr(model, key, value)
+
+        await self._session.flush()
+        return _to_entity(model)
+
+    async def delete(self, ad_id: int) -> bool:
+        result = await self._session.execute(
+            select(AdModel).where(AdModel.id == ad_id)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return False
+
+        model.status = AdStatus.ARCHIVED.value
+        await self._session.flush()
+        return True
+
+    async def count(self) -> int:
+        result = await self._session.execute(select(AdModel))
+        return len(result.scalars().all())
 
 def _to_entity(model: AdModel) -> Ad:
     return Ad(
         id=model.id,
-        user_id=model.user_id,
         title=model.title,
         description=model.description,
         price=model.price,
         category=model.category,
         city=model.city,
-        status=AdStatus(model.status),
-        views=model.views,
+        user_id=model.user_id,
         created_at=model.created_at,
         updated_at=model.updated_at,
+        status=AdStatus(model.status),
+        views=model.views,
     )
