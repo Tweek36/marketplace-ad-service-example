@@ -22,7 +22,7 @@ def create_app() -> FastAPI:
     # Configure structured logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     logger = logging.getLogger(__name__)
 
@@ -30,25 +30,26 @@ def create_app() -> FastAPI:
 
     settings = Settings()
 
-    logger.info("Settings loaded", extra={
-        "settings": {
-            "auth_service_url": settings.auth_service_url,
-            "kafka_bootstrap_servers": settings.kafka_bootstrap_servers,
-            "database_url": "***masked***"
-        }
-    })
+    logger.info(
+        "Settings loaded",
+        extra={
+            "settings": {
+                "auth_service_url": settings.auth_service_url,
+                "kafka_bootstrap_servers": settings.kafka_bootstrap_servers,
+                "database_url": "***masked***",
+            }
+        },
+    )
 
     try:
         engine = create_engine(settings)
         session_factory = create_session_factory(engine)
         logger.info("Database engine created successfully")
     except Exception as e:
-        logger.error("Failed to create database engine", extra={
-            "error": {
-                "type": type(e).__name__,
-                "message": str(e)
-            }
-        })
+        logger.error(
+            "Failed to create database engine",
+            extra={"error": {"type": type(e).__name__, "message": str(e)}},
+        )
         raise
 
     @asynccontextmanager
@@ -64,12 +65,10 @@ def create_app() -> FastAPI:
                 logger.info("Application setup completed successfully")
                 yield
         except Exception as e:
-            logger.error("Application lifespan error", extra={
-                "error": {
-                    "type": type(e).__name__,
-                    "message": str(e)
-                }
-            })
+            logger.error(
+                "Application lifespan error",
+                extra={"error": {"type": type(e).__name__, "message": str(e)}},
+            )
             raise
         finally:
             logger.info("Application lifespan shutdown")
@@ -103,14 +102,14 @@ def create_app() -> FastAPI:
                     "method": request.method,
                     "path": request.url.path,
                     "query_params": str(request.query_params),
-                    "status_code": "processing"
+                    "status_code": "processing",
                 },
                 "request": {
                     "headers": request_headers,
                     "size": len(request_body) if request_body else 0,
-                    "remote_addr": request.client.host if request.client else None
-                }
-            }
+                    "remote_addr": request.client.host if request.client else None,
+                },
+            },
         )
 
         try:
@@ -124,13 +123,10 @@ def create_app() -> FastAPI:
                         "method": request.method,
                         "path": request.url.path,
                         "status_code": "500",
-                        "duration_ms": int((time.time() - start_time) * 1000)
+                        "duration_ms": int((time.time() - start_time) * 1000),
                     },
-                    "error": {
-                        "type": type(e).__name__,
-                        "message": str(e)
-                    }
-                }
+                    "error": {"type": type(e).__name__, "message": str(e)},
+                },
             )
             raise
 
@@ -145,13 +141,13 @@ def create_app() -> FastAPI:
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": str(response.status_code),
-                    "duration_ms": duration
+                    "duration_ms": duration,
                 },
                 "response": {
                     "headers": response_headers,
-                    "size": int(response.headers.get("content-length", 0))
-                }
-            }
+                    "size": int(response.headers.get("content-length", 0)),
+                },
+            },
         )
 
         return response

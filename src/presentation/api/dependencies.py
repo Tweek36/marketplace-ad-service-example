@@ -28,6 +28,7 @@ _settings: Settings | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _user_profile_service: UserProfileService | None = None
 
+
 def setup(
     settings: Settings,
     session_factory: async_sessionmaker[AsyncSession],
@@ -38,19 +39,24 @@ def setup(
     _session_factory = session_factory
     _user_profile_service = user_profile_service
 
+
 def get_settings() -> Settings:
     assert _settings is not None
     return _settings
+
 
 def get_uow() -> UnitOfWork:
     assert _session_factory is not None
     return SQLAlchemyUnitOfWork(_session_factory)
 
+
 def get_user_profile_service() -> UserProfileService:
     assert _user_profile_service is not None
     return _user_profile_service
 
+
 bearer_scheme = HTTPBearer()
+
 
 def get_current_user_id(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
@@ -64,16 +70,12 @@ def get_current_user_id(
         logger.warning(
             "Authorization header is missing",
             extra={
-                "http": {
-                    "method": "AUTH",
-                    "status_code": "401",
-                    "url": "/api/ads"
-                },
+                "http": {"method": "AUTH", "status_code": "401", "url": "/api/ads"},
                 "error": {
                     "type": "missing_authorization",
-                    "message": "Authorization header is missing"
-                }
-            }
+                    "message": "Authorization header is missing",
+                },
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -84,16 +86,12 @@ def get_current_user_id(
     logger.info(
         "Processing authorization request",
         extra={
-            "http": {
-                "method": "AUTH",
-                "status_code": "processing",
-                "url": "/api/ads"
-            },
+            "http": {"method": "AUTH", "status_code": "processing", "url": "/api/ads"},
             "credentials": {
                 "scheme": credentials.scheme,
-                "credentials_present": bool(credentials.credentials)
-            }
-        }
+                "credentials_present": bool(credentials.credentials),
+            },
+        },
     )
 
     try:
@@ -105,31 +103,20 @@ def get_current_user_id(
         logger.info(
             "JWT token decoded successfully",
             extra={
-                "http": {
-                    "method": "AUTH",
-                    "status_code": "success",
-                    "url": "/api/ads"
-                },
+                "http": {"method": "AUTH", "status_code": "success", "url": "/api/ads"},
                 "jwt": {
                     "user_id": payload.get("user_id"),
-                    "token_type": payload.get("type")
-                }
-            }
+                    "token_type": payload.get("type"),
+                },
+            },
         )
     except jwt.PyJWTError as e:
         logger.warning(
             "Invalid or expired token",
             extra={
-                "http": {
-                    "method": "AUTH",
-                    "status_code": "401",
-                    "url": "/api/ads"
-                },
-                "error": {
-                    "type": "jwt_error",
-                    "message": str(e)
-                }
-            }
+                "http": {"method": "AUTH", "status_code": "401", "url": "/api/ads"},
+                "error": {"type": "jwt_error", "message": str(e)},
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -141,16 +128,12 @@ def get_current_user_id(
         logger.warning(
             "Invalid token type",
             extra={
-                "http": {
-                    "method": "AUTH",
-                    "status_code": "401",
-                    "url": "/api/ads"
-                },
+                "http": {"method": "AUTH", "status_code": "401", "url": "/api/ads"},
                 "jwt": {
                     "user_id": payload.get("user_id"),
-                    "token_type": payload.get("type")
-                }
-            }
+                    "token_type": payload.get("type"),
+                },
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -161,37 +144,36 @@ def get_current_user_id(
     logger.info(
         "Authorization successful",
         extra={
-            "http": {
-                "method": "AUTH",
-                "status_code": "200",
-                "url": "/api/ads"
-            },
-            "user": {
-                "user_id": payload["user_id"]
-            }
-        }
+            "http": {"method": "AUTH", "status_code": "200", "url": "/api/ads"},
+            "user": {"user_id": payload["user_id"]},
+        },
     )
     return payload["user_id"]
+
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UowDep = Annotated[UnitOfWork, Depends(get_uow)]
 CurrentUserIdDep = Annotated[int, Depends(get_current_user_id)]
 UserProfileServiceDep = Annotated[UserProfileService, Depends(get_user_profile_service)]
 
+
 def get_create_ad(
     uow: UowDep,
 ) -> CreateAdPort:
     return CreateAd(uow)
+
 
 def get_update_ad(
     uow: UowDep,
 ) -> UpdateAdPort:
     return UpdateAd(uow)
 
+
 def get_delete_ad(
     uow: UowDep,
 ) -> DeleteAdPort:
     return DeleteAd(uow)
+
 
 def get_get_ad(
     uow: UowDep,
@@ -199,16 +181,19 @@ def get_get_ad(
 ) -> GetAdPort:
     return GetAd(uow, user_profile)
 
+
 def get_get_ad_internal(
     uow: UowDep,
 ) -> GetAdInternalPort:
     return GetAdInternal(uow)
+
 
 def get_list_ads(
     uow: UowDep,
     user_profile: UserProfileServiceDep,
 ) -> ListAdsPort:
     return ListAds(uow, user_profile)
+
 
 CreateAdDep = Annotated[CreateAdPort, Depends(get_create_ad)]
 UpdateAdDep = Annotated[UpdateAdPort, Depends(get_update_ad)]
