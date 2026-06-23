@@ -57,7 +57,6 @@ def get_current_user_id(
     settings: "SettingsDep",
 ) -> int:
     import logging
-    import json
 
     logger = logging.getLogger(__name__)
 

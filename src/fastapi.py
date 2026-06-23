@@ -1,12 +1,10 @@
+import logging
+import time
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
-import time
-import logging
-import json
 
 import httpx
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response
 
 from src.infrastructure.http.auth_client import AuthServiceUserProfileService
 from src.infrastructure.persistence.database import (
@@ -20,8 +18,6 @@ from src.settings import Settings
 
 
 def create_app() -> FastAPI:
-    import logging
-    import json
 
     # Configure structured logging
     logging.basicConfig(
