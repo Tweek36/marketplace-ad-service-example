@@ -1,16 +1,14 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # PostgreSQL configuration
-    postgres_username: str | None = None
-    postgres_password: str | None = None
-    postgres_host: str | None = None
-    postgres_port: str | None = None
-    postgres_database_name: str | None = None
-    postgres_connection_string: str | None = None
+    postgres_username: str
+    postgres_password: str
+    postgres_host: str
+    postgres_port: str
+    postgres_database_name: str
 
     # Kafka configuration
     jwt_algorithm: str = "HS256"
@@ -27,23 +25,8 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Use POSTGRES_CONNECTION_STRING if provided
-        if self.postgres_connection_string:
-            self.database_url = self.postgres_connection_string
-        else:
-            # Fallback to individual PostgreSQL variables
-            if (
-                self.postgres_username
-                and self.postgres_password
-                and self.postgres_host
-                and self.postgres_port
-                and self.postgres_database_name
-            ):
-                self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
-            else:
-                raise ValueError(
-                    "Either POSTGRES_CONNECTION_STRING or all PostgreSQL connection parameters must be provided"  # noqa: E501
-                )
+        # Build database URL from individual PostgreSQL variables
+        self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
 
         # Use KAFKA_BROKERS if provided (fallback to KAFKA_BOOTSTRAP_SERVERS)
         if self.kafka_brokers:
