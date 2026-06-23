@@ -32,7 +32,7 @@ class Settings(BaseSettings):
             # Fix incorrect postgres:// prefix to postgresql:// for SQLAlchemy
             if self.postgres_connection_string.startswith("postgres://"):
                 self.database_url = self.postgres_connection_string.replace(
-                    "postgres://", "postgresql://", 1
+                    "postgres://", "postgresql+asyncpg://", 1
                 )
             else:
                 self.database_url = self.postgres_connection_string
