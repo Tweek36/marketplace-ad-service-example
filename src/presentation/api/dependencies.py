@@ -28,7 +28,6 @@ _settings: Settings | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _user_profile_service: UserProfileService | None = None
 
-
 def setup(
     settings: Settings,
     session_factory: async_sessionmaker[AsyncSession],
@@ -39,41 +38,24 @@ def setup(
     _session_factory = session_factory
     _user_profile_service = user_profile_service
 
-
 def get_settings() -> Settings:
     assert _settings is not None
     return _settings
-
 
 def get_uow() -> UnitOfWork:
     assert _session_factory is not None
     return SQLAlchemyUnitOfWork(_session_factory)
 
-
 def get_user_profile_service() -> UserProfileService:
     assert _user_profile_service is not None
     return _user_profile_service
 
-
 bearer_scheme = HTTPBearer()
 
-
 def get_current_user_id(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
     settings: "SettingsDep",
 ) -> int:
-    import logging
-
-    logger = logging.getLogger(__name__)
-    logger.info("get_current_user_id called with credentials: %s", credentials)
-
-    if credentials is None:
-        logger.info("Authorization header is missing, raising HTTP 401")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header is missing",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
     try:
         payload = jwt.decode(
             credentials.credentials,
@@ -94,30 +76,25 @@ def get_current_user_id(
         )
     return payload["user_id"]
 
-
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UowDep = Annotated[UnitOfWork, Depends(get_uow)]
 CurrentUserIdDep = Annotated[int, Depends(get_current_user_id)]
 UserProfileServiceDep = Annotated[UserProfileService, Depends(get_user_profile_service)]
-
 
 def get_create_ad(
     uow: UowDep,
 ) -> CreateAdPort:
     return CreateAd(uow)
 
-
 def get_update_ad(
     uow: UowDep,
 ) -> UpdateAdPort:
     return UpdateAd(uow)
 
-
 def get_delete_ad(
     uow: UowDep,
 ) -> DeleteAdPort:
     return DeleteAd(uow)
-
 
 def get_get_ad(
     uow: UowDep,
@@ -125,19 +102,16 @@ def get_get_ad(
 ) -> GetAdPort:
     return GetAd(uow, user_profile)
 
-
 def get_get_ad_internal(
     uow: UowDep,
 ) -> GetAdInternalPort:
     return GetAdInternal(uow)
-
 
 def get_list_ads(
     uow: UowDep,
     user_profile: UserProfileServiceDep,
 ) -> ListAdsPort:
     return ListAds(uow, user_profile)
-
 
 CreateAdDep = Annotated[CreateAdPort, Depends(get_create_ad)]
 UpdateAdDep = Annotated[UpdateAdPort, Depends(get_update_ad)]
