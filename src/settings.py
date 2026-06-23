@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: str = "5432"
     postgres_database_name: str = "fake"
+    postgres_connection_string: str | None = None
 
     # Kafka configuration
     jwt_algorithm: str = "HS256"
@@ -26,8 +27,18 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Build database URL from individual PostgreSQL variables
-        self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
+        # Use POSTGRES_CONNECTION_STRING if provided and valid
+        if self.postgres_connection_string:
+            # Fix incorrect postgres:// prefix to postgresql+asyncpg:// for SQLAlchemy
+            if self.postgres_connection_string.startswith("postgres://"):
+                self.database_url = self.postgres_connection_string.replace(
+                    "postgres://", "postgresql+asyncpg://", 1
+                )
+            else:
+                self.database_url = self.postgres_connection_string
+        else:
+            # Build database URL from individual PostgreSQL variables
+            self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
 
         # Use KAFKA_BROKERS if provided (fallback to KAFKA_BOOTSTRAP_SERVERS)
         if self.kafka_brokers:

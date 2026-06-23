@@ -62,7 +62,12 @@ def get_current_user_id(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     settings: "SettingsDep",
 ) -> int:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("get_current_user_id called with credentials: %s", credentials)
+
     if credentials is None:
+        logger.info("Authorization header is missing, raising HTTP 401")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header is missing",
