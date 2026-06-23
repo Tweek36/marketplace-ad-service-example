@@ -19,14 +19,7 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if (
-            not self.database_url
-            and self.postgres_username
-            and self.postgres_password
-            and self.postgres_host
-            and self.postgres_database_name
-        ):
-            self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
+        self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
 
         if not self.kafka_bootstrap_servers:
             self.kafka_bootstrap_servers = "localhost:9092"
