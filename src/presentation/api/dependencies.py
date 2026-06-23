@@ -53,27 +53,125 @@ def get_user_profile_service() -> UserProfileService:
 bearer_scheme = HTTPBearer()
 
 def get_current_user_id(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     settings: "SettingsDep",
 ) -> int:
+    import logging
+    import json
+
+    logger = logging.getLogger(__name__)
+
+    if credentials is None:
+        logger.warning(
+            "Authorization header is missing",
+            extra={
+                "http": {
+                    "method": "AUTH",
+                    "status_code": "401",
+                    "url": "/api/ads"
+                },
+                "error": {
+                    "type": "missing_authorization",
+                    "message": "Authorization header is missing"
+                }
+            }
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization header is missing",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    logger.info(
+        "Processing authorization request",
+        extra={
+            "http": {
+                "method": "AUTH",
+                "status_code": "processing",
+                "url": "/api/ads"
+            },
+            "credentials": {
+                "scheme": credentials.scheme,
+                "credentials_present": bool(credentials.credentials)
+            }
+        }
+    )
+
     try:
         payload = jwt.decode(
             credentials.credentials,
             settings.jwt_secret,
             algorithms=[settings.jwt_algorithm],
         )
-    except jwt.PyJWTError:
+        logger.info(
+            "JWT token decoded successfully",
+            extra={
+                "http": {
+                    "method": "AUTH",
+                    "status_code": "success",
+                    "url": "/api/ads"
+                },
+                "jwt": {
+                    "user_id": payload.get("user_id"),
+                    "token_type": payload.get("type")
+                }
+            }
+        )
+    except jwt.PyJWTError as e:
+        logger.warning(
+            "Invalid or expired token",
+            extra={
+                "http": {
+                    "method": "AUTH",
+                    "status_code": "401",
+                    "url": "/api/ads"
+                },
+                "error": {
+                    "type": "jwt_error",
+                    "message": str(e)
+                }
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     if payload.get("type") != "access":
+        logger.warning(
+            "Invalid token type",
+            extra={
+                "http": {
+                    "method": "AUTH",
+                    "status_code": "401",
+                    "url": "/api/ads"
+                },
+                "jwt": {
+                    "user_id": payload.get("user_id"),
+                    "token_type": payload.get("type")
+                }
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    logger.info(
+        "Authorization successful",
+        extra={
+            "http": {
+                "method": "AUTH",
+                "status_code": "200",
+                "url": "/api/ads"
+            },
+            "user": {
+                "user_id": payload["user_id"]
+            }
+        }
+    )
     return payload["user_id"]
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
