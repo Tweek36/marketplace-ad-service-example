@@ -188,7 +188,8 @@ async def main() -> None:
                 created_by_user[user["email"]].append(ad)
             logger.info(
                 "created %s ads for %s",
-                len(created_by_user[user["email"]]), user["email"],
+                len(created_by_user[user["email"]]),
+                user["email"],
             )
 
         logger.info("=== ads: read ===")
