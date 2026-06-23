@@ -51,8 +51,13 @@ services:
       context: .
     command: ["uv", "run", "python", "-m", "bin.api"]
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@ad-postgres:5432/ads_db
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: ad-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE_NAME: ads_db
       KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      KAFKA_TOPIC_ADS: ads
       AUTH_SERVICE_URL: http://auth-service:8000
       JWT_SECRET: ${JWT_SECRET:-change-me}
     depends_on:
@@ -70,8 +75,13 @@ services:
       context: .
     command: ["uv", "run", "python", "-m", "bin.outbox"]
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@ad-postgres:5432/ads_db
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: ad-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE_NAME: ads_db
       KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      KAFKA_TOPIC_ADS: ads
     depends_on:
       ad-postgres:
         condition: service_healthy

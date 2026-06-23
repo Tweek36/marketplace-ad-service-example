@@ -21,7 +21,6 @@ RUN addgroup --system --gid 1000 appuser && \
 
 USER appuser
 
-# Install uv for appuser
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock ./
