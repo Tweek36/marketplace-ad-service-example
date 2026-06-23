@@ -63,6 +63,7 @@ def get_current_user_id(
     settings: "SettingsDep",
 ) -> int:
     import logging
+
     logger = logging.getLogger(__name__)
     logger.info("get_current_user_id called with credentials: %s", credentials)
 
