@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: student-tweek36-marketplace-ad-service-api-fixed
+  namespace: student-tweek36-marketplace-ad-service
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  labels:
+    app.kubernetes.io/name: student-tweek36-marketplace-ad-service
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: tweek36-marketplace.dev-2.python-labs.ru
+    http:
+      paths:
+      - backend:
+          service:
+            name: student-tweek36-marketplace-ad-service-web-fixed
+            port:
+              number: 8000
+        path: /api/(ads(?:/.*)?)
+        pathType: ImplementationSpecific

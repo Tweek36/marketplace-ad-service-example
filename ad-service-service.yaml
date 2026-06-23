@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: student-tweek36-marketplace-ad-service-web-fixed
+  namespace: student-tweek36-marketplace-ad-service
+  labels:
+    app.kubernetes.io/name: student-tweek36-marketplace-ad-service
+    app.kubernetes.io/component: web-fixed
+spec:
+  selector:
+    app.kubernetes.io/name: student-tweek36-marketplace-ad-service
+    app.kubernetes.io/component: web-fixed
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
