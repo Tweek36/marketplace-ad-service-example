@@ -29,10 +29,10 @@ class Settings(BaseSettings):
 
         # Use POSTGRES_CONNECTION_STRING if provided and valid
         if self.postgres_connection_string:
-            # Fix incorrect postgres:// prefix to postgresql+asyncpg:// for SQLAlchemy
+            # Fix incorrect postgres:// prefix to postgresql:// for SQLAlchemy
             if self.postgres_connection_string.startswith("postgres://"):
                 self.database_url = self.postgres_connection_string.replace(
-                    "postgres://", "postgresql+asyncpg://", 1
+                    "postgres://", "postgresql://", 1
                 )
             else:
                 self.database_url = self.postgres_connection_string
