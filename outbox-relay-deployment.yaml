@@ -23,11 +23,22 @@ spec:
         image: ghcr.io/tweek36/marketplace-ad-service-example:c536e30b52c9182eb5574d5ef008b77175984994
         command: ["uv", "run", "python", "-m", "bin.outbox"]
         env:
-        - name: DATABASE_URL
+        - name: POSTGRES_DATABASE_NAME
+          value: "student_Tweek36-marketplace-ad-service-postgres"
+        - name: POSTGRES_HOST
+          value: "postgres-postgresql.postgres.svc"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USERNAME
           valueFrom:
             secretKeyRef:
               name: student-tweek36-marketplace-ad-service-secrets
-              key: POSTGRES_CONNECTION_STRING
+              key: POSTGRES_USERNAME
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: student-tweek36-marketplace-ad-service-secrets
+              key: POSTGRES_PASSWORD
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "kafka.kafka.svc.cluster.local:9092"
         - name: KAFKA_TOPIC_ADS
