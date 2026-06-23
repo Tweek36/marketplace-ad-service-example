@@ -5,11 +5,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # PostgreSQL configuration
-    postgres_username: str
-    postgres_password: str
-    postgres_host: str
-    postgres_port: str
-    postgres_database_name: str
+    postgres_username: str = "fake"
+    postgres_password: str = "fake"
+    postgres_host: str = "localhost"
+    postgres_port: str = "5432"
+    postgres_database_name: str = "fake"
 
     # Kafka configuration
     jwt_algorithm: str = "HS256"
