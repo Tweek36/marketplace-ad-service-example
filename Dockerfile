@@ -7,22 +7,28 @@ ENV PYTHONUNBUFFERED=1 \
     UV_NO_DEV=1 \
     UV_FROZEN=1 \
     PYTHONPATH=/app \
-    PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
+    PATH="/root/.local/bin:/home/appuser/.local/bin:$PATH"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+RUN addgroup --system --gid 1000 appuser && \
+    adduser --system --uid 1000 --home /home/appuser --ingroup appuser appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# Install uv for appuser
+RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev
 
 COPY . .
 
-RUN uv sync --frozen --no-dev
-
 EXPOSE 8002
 
-CMD ["/root/.cargo/bin/uv", "run", "python", "-m", "bin.api"]
+CMD ["bash", "./run.sh"]
