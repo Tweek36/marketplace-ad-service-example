@@ -5,7 +5,6 @@ from src.application.ports.repositories import AdRepository
 from src.domain.entities import Ad, AdStatus
 from src.infrastructure.persistence.models import AdModel
 
-
 class SQLAlchemyAdRepository(AdRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -62,12 +61,24 @@ class SQLAlchemyAdRepository(AdRepository):
         models = result.scalars().all()
         return [_to_entity(model) for model in models]
 
-    async def list(self, limit: int, offset: int) -> list[Ad]:
+    async def list(self, user_id: int | None, limit: int, offset: int) -> tuple[list[Ad], int]:
+        query = select(AdModel)
+        if user_id is not None:
+            query = query.where(AdModel.user_id == user_id)
+
+        # Get total count
+        total_query = select(AdModel)
+        if user_id is not None:
+            total_query = total_query.where(AdModel.user_id == user_id)
+        total_result = await self._session.execute(total_query)
+        total = len(total_result.scalars().all())
+
+        # Get paginated results
         result = await self._session.execute(
-            select(AdModel).limit(limit).offset(offset)
+            query.limit(limit).offset(offset)
         )
         models = result.scalars().all()
-        return [_to_entity(model) for model in models]
+        return [_to_entity(model) for model in models], total
 
     async def update(self, ad_id: int, **kwargs) -> Ad | None:
         result = await self._session.execute(select(AdModel).where(AdModel.id == ad_id))
@@ -95,7 +106,6 @@ class SQLAlchemyAdRepository(AdRepository):
     async def count(self) -> int:
         result = await self._session.execute(select(AdModel))
         return len(result.scalars().all())
-
 
 def _to_entity(model: AdModel) -> Ad:
     return Ad(
