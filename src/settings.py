@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     kafka_topic_ads: str | None = None
     kafka_topic_marketplace_ads: str | None = None
 
-    auth_service_url: str = "http://localhost:8000"
+    auth_service_url: str = "http://student-tweek36-marketplace-auth-service-web.student-tweek36-marketplace-auth-service.svc.cluster.local:8000"
     jwt_secret: str = "change-me"
 
     database_url: str = ""
