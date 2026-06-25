@@ -58,8 +58,7 @@ class SQLAlchemyAdRepository(AdRepository):
     async def get_by_user_id(self, user_id: int) -> list[Ad]:
         result = await self._session.execute(
             select(AdModel).where(
-                AdModel.user_id == user_id,
-                AdModel.status == AdStatus.ACTIVE.value
+                AdModel.user_id == user_id, AdModel.status == AdStatus.ACTIVE.value
             )
         )
         models = result.scalars().all()
