@@ -199,3 +199,50 @@ async def test_invalid_token_rejected(client: AsyncClient) -> None:
         },
     )
     assert resp.status_code == 401
+
+async def test_ad_list_contains_created_ad(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    """Test that after creating an ad, GET /api/ads returns it among items"""
+    # Create a new ad
+    resp = await client.post(
+        "/ads",
+        headers=auth_headers,
+        json={
+            "title": "Phone",
+            "description": "Like new",
+            "price": 500,
+            "category": "electronics",
+            "city": "Spb",
+        },
+    )
+    assert resp.status_code == 201
+    created_data = resp.json()
+    ad_id = created_data["id"]
+    assert isinstance(ad_id, int)
+    assert ad_id > 0
+
+    # Get the list of ads
+    resp = await client.get("/ads")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    # Check that the response has the expected structure
+    assert "items" in data
+    assert "total" in data
+    assert "limit" in data
+    assert "offset" in data
+
+    # Check that the created ad is in the list
+    items = data["items"]
+    ad_ids = [item["id"] for item in items]
+    assert ad_id in ad_ids
+
+    # Find the created ad in the list
+    created_ad_in_list = next(item for item in items if item["id"] == ad_id)
+    assert created_ad_in_list["title"] == "Phone"
+    assert created_ad_in_list["description"] == "Like new"
+    assert created_ad_in_list["price"] == 500
+    assert created_ad_in_list["category"] == "electronics"
+    assert created_ad_in_list["city"] == "Spb"
+    assert created_ad_in_list["status"] == "active"

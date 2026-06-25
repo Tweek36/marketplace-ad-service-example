@@ -57,7 +57,10 @@ class SQLAlchemyAdRepository(AdRepository):
 
     async def get_by_user_id(self, user_id: int) -> list[Ad]:
         result = await self._session.execute(
-            select(AdModel).where(AdModel.user_id == user_id)
+            select(AdModel).where(
+                AdModel.user_id == user_id,
+                AdModel.status == AdStatus.ACTIVE.value
+            )
         )
         models = result.scalars().all()
         return [_to_entity(model) for model in models]
@@ -65,12 +68,12 @@ class SQLAlchemyAdRepository(AdRepository):
     async def list(
         self, user_id: int | None, limit: int, offset: int
     ) -> tuple[list[Ad], int]:
-        query = select(AdModel)
+        query = select(AdModel).where(AdModel.status == AdStatus.ACTIVE.value)
         if user_id is not None:
             query = query.where(AdModel.user_id == user_id)
 
         # Get total count
-        total_query = select(AdModel)
+        total_query = select(AdModel).where(AdModel.status == AdStatus.ACTIVE.value)
         if user_id is not None:
             total_query = total_query.where(AdModel.user_id == user_id)
         total_result = await self._session.execute(total_query)
@@ -105,7 +108,9 @@ class SQLAlchemyAdRepository(AdRepository):
         return True
 
     async def count(self) -> int:
-        result = await self._session.execute(select(AdModel))
+        result = await self._session.execute(
+            select(AdModel).where(AdModel.status == AdStatus.ACTIVE.value)
+        )
         return len(result.scalars().all())
 
 
