@@ -32,6 +32,7 @@ async def main() -> None:
     relay = OutboxRelay(
         uow_factory=lambda: SQLAlchemyUnitOfWork(session_factory),
         broker=broker,
+        idle_sleep=0.1,  # Уменьшено с 1.0 до 0.1 для более быстрой обработки событий
     )
 
     try:
