@@ -56,6 +56,8 @@ services:
     build:
       context: .
     command: ["uv", "run", "python", "-m", "bin.api"]
+    ports:
+      - "8000:8002"
     environment:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
