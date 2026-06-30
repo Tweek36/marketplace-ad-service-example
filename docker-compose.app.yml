@@ -57,7 +57,7 @@ services:
       context: .
     command: ["uv", "run", "python", "-m", "bin.api"]
     ports:
-      - "8000:8002"
+      - "8002:8000"
     environment:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
