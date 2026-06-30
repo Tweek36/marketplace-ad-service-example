@@ -56,8 +56,6 @@ services:
     build:
       context: .
     command: ["uv", "run", "python", "-m", "bin.api"]
-    ports:
-      - "8002:8000"
     environment:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -66,8 +64,10 @@ services:
       POSTGRES_DATABASE_NAME: ${POSTGRES_DATABASE_NAME:-ads_db}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BROKERS:-redpanda:29092}
       KAFKA_TOPIC_ADS: ${KAFKA_TOPIC_MARKETPLACE_ADS:-ads}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://ad-service:8002}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://student-tweek36-marketplace-auth-service-web.student-tweek36-marketplace-auth-service.svc.cluster.local:8000}
       JWT_SECRET: ${JWT_SECRET:-change-me}
+    ports:
+      - "8000:8000"
     depends_on:
       ad-postgres:
         condition: service_healthy
