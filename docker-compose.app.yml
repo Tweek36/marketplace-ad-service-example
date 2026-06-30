@@ -39,7 +39,12 @@ services:
       context: .
     command: ["uv", "run", "alembic", "upgrade", "head"]
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@ad-postgres:5432/ads_db
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST: ${POSTGRES_HOST:-ad-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DATABASE_NAME: ${POSTGRES_DATABASE_NAME:-ads_db}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BROKERS:-redpanda:29092}
     depends_on:
       ad-postgres:
         condition: service_healthy
@@ -47,6 +52,7 @@ services:
       - marketplace
 
   ad-service:
+    container_name: ad-service
     build:
       context: .
     command: ["uv", "run", "python", "-m", "bin.api"]
@@ -58,7 +64,7 @@ services:
       POSTGRES_DATABASE_NAME: ${POSTGRES_DATABASE_NAME:-ads_db}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BROKERS:-redpanda:29092}
       KAFKA_TOPIC_ADS: ${KAFKA_TOPIC_MARKETPLACE_ADS:-ads}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://student-tweek36-marketplace-auth-service-web.student-tweek36-marketplace-auth-service.svc.cluster.local:8000}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://ad-service:8002}
       JWT_SECRET: ${JWT_SECRET:-change-me}
     depends_on:
       ad-postgres:
@@ -71,6 +77,7 @@ services:
       - marketplace
 
   ad-outbox-relay:
+    container_name: ad-outbox-relay
     build:
       context: .
     command: ["uv", "run", "python", "-m", "bin.outbox"]

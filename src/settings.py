@@ -22,36 +22,6 @@ class Settings(BaseSettings):
     auth_service_url: str = "http://student-tweek36-marketplace-auth-service-web.student-tweek36-marketplace-auth-service.svc.cluster.local:8000"
     jwt_secret: str = "change-me"
 
-    database_url: str = ""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        # Use POSTGRES_CONNECTION_STRING if provided and valid
-        if self.postgres_connection_string:
-            # Fix incorrect postgres:// prefix to postgresql:// for SQLAlchemy
-            if self.postgres_connection_string.startswith("postgres://"):
-                self.database_url = self.postgres_connection_string.replace(
-                    "postgres://", "postgresql+asyncpg://", 1
-                )
-            else:
-                self.database_url = self.postgres_connection_string
-        else:
-            # Build database URL from individual PostgreSQL variables
-            self.database_url = f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
-
-        # Use KAFKA_BROKERS if provided (fallback to KAFKA_BOOTSTRAP_SERVERS)
-        if self.kafka_brokers:
-            self.kafka_bootstrap_servers = self.kafka_brokers
-        elif not self.kafka_bootstrap_servers:
-            raise ValueError(
-                "Either KAFKA_BROKERS or KAFKA_BOOTSTRAP_SERVERS must be provided"
-            )
-
-        # Use KAFKA_TOPIC_MARKETPLACE_ADS if provided (fallback to KAFKA_TOPIC_ADS)
-        if self.kafka_topic_marketplace_ads:
-            self.kafka_topic_ads = self.kafka_topic_marketplace_ads
-        elif not self.kafka_topic_ads:
-            raise ValueError(
-                "Either KAFKA_TOPIC_MARKETPLACE_ADS or KAFKA_TOPIC_ADS must be provided"
-            )
+    @property
+    def database_url(self) -> str:
+        return f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database_name}"
